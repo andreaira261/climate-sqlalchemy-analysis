@@ -9,11 +9,10 @@ from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
 
-
 #################################################
 # Database Setup
 #################################################
-engine = create_engine("sqlite:////Users/andreaaguilar/sqlalchemy-challenge/SurfsUp/Resources/hawaii.sqlite")
+engine = create_engineengine = create_engine("sqlite:///SurfsUp/Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -25,10 +24,6 @@ Base.prepare(autoload_with=engine)
 measurements = Base.classes.measurement
 stations = Base.classes.station
 
-# Create our session (link) from Python to the DB
-session = Session(engine)
-
-
 #################################################
 # Flask Setup
 #################################################
@@ -37,44 +32,121 @@ app = Flask(__name__)
 #################################################
 # Flask Routes
 #################################################
+
 @app.route("/")
 def home():
-    """List all available api routes."""
+    """Lists all available api routes."""
     return (
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/2017-01-26<br/>"
+        f"/api/v1.0/2015-01-26/2017-02-18"
     )
 
 @app.route("/api/v1.0/precipitation")
 def prcp_dict():
-    recent_date = session.query(measurements.date).order_by(measurements.date.desc()).first()
-    recent_date_dt = dt.datetime.strptime(recent_date[0], '%Y-%m-%d').date()
-    year_ago = recent_date_dt - dt.timedelta(days=365)
+    """Returns precipitation data for the last year in the database."""
+    
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    
+    # Query precipitation data for the last year of data. 
     precipitation = session.query(measurements.date, measurements.prcp).\
-        filter(measurements.date <= recent_date_dt).\
-        filter(measurements.date >= year_ago).all()
+        filter(measurements.date <= '2017-08-23').\
+        filter(measurements.date >= '2016-08-23').all()
+    
+    session.close()
+
+    # Save the query results as a dictionary and return the jsonified data. 
     prcp_dict = {date: prcp for date, prcp in precipitation}
     return jsonify(prcp_dict)
     
+
 @app.route("/api/v1.0/stations")
 def stations_list():
+   """Returns all of the stations in the database."""
+  
+   session = Session(engine)
+
+   # Query all of the stations in the database.  
    stationslist = session.query(stations.station).all()
+
+   session.close()
+   
+   # Save the query results as a one-dimensional list and return the jsonified data. 
    stationslist1 = list(np.ravel(stationslist))
    return jsonify(stationslist1)
 
+
 @app.route("/api/v1.0/tobs")
 def tobs_list():
-    recent_date = session.query(measurements.date).order_by(measurements.date.desc()).first()
-    recent_date_dt = dt.datetime.strptime(recent_date[0], '%Y-%m-%d').date()
-    year_ago = recent_date_dt - dt.timedelta(days=365)
+    """Returns temperature data for the most active station for the last year in the database."""
+
+    session = Session(engine)
+
+    # Query temperature data for the most active station. 
     most_active_temps = session.query(measurements.tobs).\
-        filter(measurements.date <= recent_date_dt).\
-        filter(measurements.date >= year_ago).\
+        filter(measurements.date <= '2017-08-23').\
+        filter(measurements.date >= '2016-08-23').\
         filter(measurements.station == 'USC00519281').all()
+    
+    session.close()
+
+    # Save the query results as a one-dimensional list and return the jsonified data. 
     temeperaturelist = list(np.ravel(most_active_temps))
     return jsonify(temeperaturelist)
+
+
+@app.route("/api/v1.0/<start>")
+def start_date(start):
+    """Returns minimum, average, and maximum temperatures calculated from the given start date to the end of the dataset."""
     
+    session = Session(engine)
+
+    # Save the given start date as a parameter for the URL.
+    date_format = dt.datetime.strptime(start, '%Y-%m-%d').date()
+   
+    # Query the minimum, average, and maximum temperatures from the given start date to the end of the dataset. 
+    sel = [func.min(measurements.tobs), func.avg(measurements.tobs), func.max(measurements.tobs)]
+    start_query = session.query(*sel).\
+        filter(measurements.date >= date_format).all()
+    
+    session.close()
+    
+    # Save the query results as a one-dimensional list, then dictionary and return the jsonified data. 
+    start_list = list(np.ravel(start_query))
+    start_dict = {'TMIN': start_list[0],
+                  'TAVG': start_list[1],
+                  'TMAX': start_list[2]}
+    return jsonify(start_dict)
+
+
+@app.route("/api/v1.0/<start>/<end>")
+def startend_date(start, end):
+    """Returns minimum, average, and maximum temperatures calculated from the given start date to the given end date."""
+
+    session = Session(engine)
+
+    # Save the given start date and end date as a parameters for the URL.
+    start_date_format = dt.datetime.strptime(start, '%Y-%m-%d').date()
+    end_date_format = dt.datetime.strptime(end, '%Y-%m-%d').date()
+   
+    # Query the minimum, average, and maximum temperatures from the given start date to the given date.
+    sel = [func.min(measurements.tobs), func.avg(measurements.tobs), func.max(measurements.tobs)]
+    startend_query = session.query(*sel).\
+        filter(measurements.date >= start_date_format).\
+        filter(measurements.date <= end_date_format).all()
+    
+    session.close()
+    
+    # Save the query results as a one-dimensional list, then dictionary and return the jsonified data. 
+    startend_list = list(np.ravel(startend_query))
+    startend_dict = {'TMIN': startend_list[0],
+                  'TAVG': startend_list[1],
+                  'TMAX': startend_list[2]}
+    return jsonify(startend_dict)
+
 if __name__ == '__main__':
     app.run(debug=True)
