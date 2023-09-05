@@ -41,8 +41,8 @@ def home():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/2017-01-26<br/>"
-        f"/api/v1.0/2015-01-26/2017-02-18"
+        f"/api/v1.0/start/2017-01-26<br/>"
+        f"/api/v1.0/start/2015-01-26/end/2017-02-18"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -99,7 +99,7 @@ def tobs_list():
     return jsonify(temeperaturelist)
 
 
-@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/start/<start>")
 def start_date(start):
     """Returns minimum, average, and maximum temperatures calculated from the given start date to the end of the dataset."""
     
@@ -123,7 +123,7 @@ def start_date(start):
     return jsonify(start_dict)
 
 
-@app.route("/api/v1.0/<start>/<end>")
+@app.route("/api/v1.0/start/<start>/end/<end>")
 def startend_date(start, end):
     """Returns minimum, average, and maximum temperatures calculated from the given start date to the given end date."""
 
