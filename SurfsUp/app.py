@@ -55,7 +55,7 @@ def prcp_dict():
     precipitation = session.query(measurements.date, measurements.prcp).\
         filter(measurements.date <= recent_date_dt).\
         filter(measurements.date >= year_ago).all()
-    prcp_dict = {date: value for date, value in precipitation}
+    prcp_dict = {date: prcp for date, prcp in precipitation}
     return jsonify(prcp_dict)
     
 @app.route("/api/v1.0/stations")
