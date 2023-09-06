@@ -12,7 +12,7 @@ from flask import Flask, jsonify
 #################################################
 # Database Setup
 #################################################
-engine = create_engineengine = create_engine("sqlite:///SurfsUp/Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///SurfsUp/Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -41,12 +41,12 @@ def home():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/start/2017-01-26<br/>"
-        f"/api/v1.0/start/2015-01-26/end/2017-02-18"
+        f"/api/v1.0/start/2014-01-26<br/>"
+        f"/api/v1.0/start/2014-01-26/end/2017-02-18"
     )
 
 @app.route("/api/v1.0/precipitation")
-def prcp_dict():
+def precipations():
     """Returns precipitation data for the last year in the database."""
     
     # Create our session (link) from Python to the DB
@@ -54,14 +54,14 @@ def prcp_dict():
     
     # Query precipitation data for the last year of data. 
     precipitation = session.query(measurements.date, measurements.prcp).\
-        filter(measurements.date <= '2017-08-23').\
-        filter(measurements.date >= '2016-08-23').all()
+        filter(measurements.date >= '2016-08-23').\
+        order_by(measurements.date).all()
     
     session.close()
 
-    # Save the query results as a dictionary and return the jsonified data. 
-    prcp_dict = {date: prcp for date, prcp in precipitation}
-    return jsonify(prcp_dict)
+    # Save the query results as a list of dictionaries with the date as the key and value as the precipitation and return the jsonified data. 
+    prcp_dicts = [{date: prcp} for date, prcp in precipitation]
+    return jsonify(prcp_dicts)
     
 
 @app.route("/api/v1.0/stations")
@@ -71,13 +71,13 @@ def stations_list():
    session = Session(engine)
 
    # Query all of the stations in the database.  
-   stationslist = session.query(stations.station).all()
+   stations_list = session.query(stations.station).all()
 
    session.close()
    
    # Save the query results as a one-dimensional list and return the jsonified data. 
-   stationslist1 = list(np.ravel(stationslist))
-   return jsonify(stationslist1)
+   stations_list_1 = list(np.ravel(stations_list))
+   return jsonify(stations_list_1)
 
 
 @app.route("/api/v1.0/tobs")
@@ -88,15 +88,14 @@ def tobs_list():
 
     # Query temperature data for the most active station. 
     most_active_temps = session.query(measurements.tobs).\
-        filter(measurements.date <= '2017-08-23').\
         filter(measurements.date >= '2016-08-23').\
         filter(measurements.station == 'USC00519281').all()
     
     session.close()
 
     # Save the query results as a one-dimensional list and return the jsonified data. 
-    temeperaturelist = list(np.ravel(most_active_temps))
-    return jsonify(temeperaturelist)
+    temeperature_list = list(np.ravel(most_active_temps))
+    return jsonify(temeperature_list)
 
 
 @app.route("/api/v1.0/start/<start>")
@@ -117,9 +116,9 @@ def start_date(start):
     
     # Save the query results as a one-dimensional list, then dictionary and return the jsonified data. 
     start_list = list(np.ravel(start_query))
-    start_dict = {'TMIN': start_list[0],
-                  'TAVG': start_list[1],
-                  'TMAX': start_list[2]}
+    start_dict = {'Minimum Temperature': start_list[0],
+                  'Average Temperature': start_list[1],
+                  'Maximum Temperature': start_list[2]}
     return jsonify(start_dict)
 
 
@@ -129,7 +128,7 @@ def startend_date(start, end):
 
     session = Session(engine)
 
-    # Save the given start date and end date as a parameters for the URL.
+    # Save the given start date and end date as parameters for the URL.
     start_date_format = dt.datetime.strptime(start, '%Y-%m-%d').date()
     end_date_format = dt.datetime.strptime(end, '%Y-%m-%d').date()
    
@@ -143,9 +142,9 @@ def startend_date(start, end):
     
     # Save the query results as a one-dimensional list, then dictionary and return the jsonified data. 
     startend_list = list(np.ravel(startend_query))
-    startend_dict = {'TMIN': startend_list[0],
-                  'TAVG': startend_list[1],
-                  'TMAX': startend_list[2]}
+    startend_dict = {'Minimum Temperature': startend_list[0],
+                  'Average Temperature': startend_list[1],
+                  'Maximum Temperature': startend_list[2]}
     return jsonify(startend_dict)
 
 if __name__ == '__main__':
