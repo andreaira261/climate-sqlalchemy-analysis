@@ -10,17 +10,23 @@ In this assignment, we used Python and SQLAlchemy to analyze and visualize clima
 - Matplotlib
 - Flask
 
-## Jupyter Notebook Database Connection
+## Part 1: Explore and Analyze the Climate Data
+File: SurfsUp → [climate_code.ipynb](SurfsUp/climate_code.ipynb)
 
-## Precipitation Analysis 
+### Jupyter Notebook Database Connection
 
-## Station Analysis 
+### Precipitation Analysis 
 
-## API SQLite Connection and Landing Page 
+### Station Analysis 
 
-## API Static Routes 
+## Part 2: Design Your Climate App
+File: SurfsUp → [app.py](SurfsUp/app.py)
 
-## API Dynamic Route 
+### API SQLite Connection and Landing Page 
+
+### API Static Routes 
+
+### API Dynamic Route 
 
 
 
